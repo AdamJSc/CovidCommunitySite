@@ -42,9 +42,15 @@ docker-compose up
 
 ## Customising
 
+The following examples will refer to the area represented by the site (e.g. Ceredigion) as a "territory".
+
 ### Adding regions
 
-Regions (Used to split data within a county for example) need to be added to `src/constants/regions.json`. The example structure can be seen in the existing file.
+Regions can be used to split data into smaller areas within a territory.
+ 
+They are configured within the `src/constants/regions.json` file, and an example structure can be seen in the existing file.
+
+Each main region can comprise a number of sub-regions - again, please see the data structures within the `regions` file for an example.
 
 ### Adding new locales
 
@@ -59,6 +65,10 @@ New categories and sub-categories can be added to the `src/constants/categories.
 Resources can be added to the `src/constants/resources.json` file. In there you will see an example of a resource localised into english and welsh (Although the welsh locale isn't currently setup in the template project). Most properties in the resource are localisable, except for where it doesn't make sense like for urls, contact details, or people's names.
 
 How each property is displayed in the UI is best visualised by visiting the `/submit` path of the website!
+
+Each resource comprises an array of `regionIds` - each of these can reference either a main or sub region.
+
+A resource that references a sub region will also display when filtered by its respective main (parent) region.
 
 ## Hosting
 
