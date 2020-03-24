@@ -4,7 +4,30 @@
 			"cy": "Gogledd",
 			"en": "North"
 		},
-		"id": "north"
+		"id": "north",
+		"subRegions": [
+			{
+				"name": {
+					"cy": "Dinas y Gogledd 1",
+					"en": "North City 1"
+				},
+				"id": "north-city-1"
+			},
+			{
+				"name": {
+					"cy": "Dinas y Gogledd 2",
+					"en": "North City 2"
+				},
+				"id": "north-city-2"
+			},
+			{
+				"name": {
+					"cy": "Dinas y Gogledd 3",
+					"en": "North City 3"
+				},
+				"id": "north-city-3"
+			}
+		]
 	},
 	{
 		"name": {
@@ -25,6 +48,15 @@
 			"cy": "De",
 			"en": "South"
 		},
-		"id": "south"
+		"id": "south",
+		"subRegions": [
+			{
+				"name": {
+					"cy": "Dinas y De 1",
+					"en": "South City 1"
+				},
+				"id": "south-city-1"
+			}
+		]
 	}
 ]

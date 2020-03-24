@@ -56,7 +56,7 @@ class Resource extends React.Component {
       	<Card.Body>
       		<p>
       			<FontAwesomeIcon style={{marginRight: 10}} icon={faLocationArrow}/>
-      			{typeof resource.city === "string" ? resource.city : resource.city[this.props.locale]}
+      			{typeof resource.address.city === "string" ? resource.address.city : resource.address.city[this.props.locale]}
       			{formattedAddress && (
       				` - ${formattedAddress}`
       			)}
