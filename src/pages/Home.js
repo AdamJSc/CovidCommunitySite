@@ -1,4 +1,4 @@
- import React from 'react';
+import React from 'react';
 
 import Container from 'react-bootstrap/Container';
 import Dropdown from 'react-bootstrap/Dropdown';
@@ -47,21 +47,67 @@ const styles = {
   }
 }
 
+const getFilterObjectFromQueryString = (hash) => {
+  const filterParams = ['regionType', 'regionId'];
+  let filterValues = []
+
+  filterParams.forEach((param) => {
+    filterValues[param] = null
+    try {
+      filterValues[param] = hash.split(param + '=')[1].split('&')[0]
+    } catch(e) {}
+  })
+
+  return {...filterValues}
+}
+
+const getRegionById = (regionId) => {
+  let filtered = Regions.filter((region) => {
+    return region.id === regionId
+  })
+  return filtered.length === 0 ? null : filtered[0]
+}
+
+const resourceMatchesRegion = (resource, regionType, regionId) => {
+  if (typeof regionType !== 'string' || typeof regionId !== 'string') {
+    // nothing to match on
+    return true
+  }
+
+  if (regionType === 'sub') {
+    // resource id must match regionId exactly
+    return resource.regionIds.includes(regionId)
+  }
+
+  if (regionType === 'main') {
+    // check if resource id matches regionId exactly
+    if (resource.regionIds.includes(regionId)) {
+      return true
+    }
+
+    // check if resource id matches any of region's sub regions
+    let region = getRegionById(regionId)
+    if (region === null || typeof region.subRegions === 'undefined') {
+      return false
+    }
+    for (let i = 0; i < region.subRegions.length; i++) {
+      if (resource.regionIds.includes(region.subRegions[i].id)) {
+        return true
+      }
+    }
+  }
+
+  return false
+}
+
 class App extends React.Component {
 
   constructor(props) {
-    let regionId = null;
-    let region = Regions.find(region => {
-      return props.location.hash === `#${region.id}`
-    });
-    if (region) {
-      regionId = region.id;
-    }
     super(props);
     this.state = {
       category: null,
       locale: Locales[0].id,
-      regionId,
+      filter: getFilterObjectFromQueryString(props.location.hash),
       searchTerm: ""
     }
   }
@@ -83,8 +129,10 @@ class App extends React.Component {
   }
 
   onRegionSelected = (regionId) => {
-    this.setState({
-      regionId: regionId == "_all_" ? null : regionId
+    this.setState((state, props) => {
+      state.filter.regionType = 'main'
+      state.filter.regionId = regionId
+      return state
     });
   };
 
@@ -95,22 +143,13 @@ class App extends React.Component {
   };
 
   componentDidUpdate(prevProps) {
-    if (prevProps.location.hash !== this.props.location.hash) {
-      if (this.props.location.hash === "") {
-        this.setState({
-          regionId: null
-        });
-      } else {
-        let region = Regions.find(region => {
-          return this.props.location.hash === `#${region.id}`
-        });
-        if (region) {
-          this.setState({
-            regionId: region.id
-          })
-        }
-      }
+    if (prevProps.location.hash === this.props.location.hash) {
+      return
     }
+    this.setState((state, props) => {
+      state.filter = getFilterObjectFromQueryString(this.props.location.hash)
+      return state
+    })
   }
 
   filterResources = (resources) => {
@@ -120,8 +159,8 @@ class App extends React.Component {
     const searchTerm = this.state.searchTerm.toUpperCase();
 
     filteredResources = filteredResources.filter(resource => {
-      if (this.state.regionId && this.state.regionId != resource.regionId) {
-        return false;
+      if (!resourceMatchesRegion(resource, this.state.filter.regionType, this.state.filter.regionId)) {
+        return false
       }
       if (this.state.category && this.state.category != resource.category) {
         return false;
@@ -183,7 +222,7 @@ class App extends React.Component {
                   <Nav.Link
                     key={index}
                     eventKey={region.id}
-                    href={`#${region.id}`}
+                    href={`#regionType=main&regionId=${region.id}`}
                   >
                     {typeof region.name === "string" ? region.name : region.name[this.state.locale]}
                   </Nav.Link>
@@ -195,7 +234,7 @@ class App extends React.Component {
                 <Nav.Link href="/submit" active>
                   {t('home.getListed')}
                 </Nav.Link>
-                <NavDropdown alignRight active title={currentLocale.name} id="collasible-nav-dropdown">
+                <NavDropdown alignRight active title={currentLocale.name} id="collapsible-nav-dropdown">
                   {Locales.map((locale, index) => <NavDropdown.Item eventKey={locale.id} key={index}>{locale.name}</NavDropdown.Item>)}
                 </NavDropdown>
               </Nav>
