@@ -47,8 +47,9 @@ const styles = {
   }
 }
 
+const filterParams = ['regionType', 'regionId', 'category']
+
 const getFilterObjectFromQueryString = (hash) => {
-  const filterParams = ['regionType', 'regionId'];
   let filterValues = []
 
   filterParams.forEach((param) => {
@@ -105,7 +106,6 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      category: null,
       locale: Locales[0].id,
       filter: getFilterObjectFromQueryString(props.location.hash),
       searchTerm: ""
@@ -113,8 +113,9 @@ class App extends React.Component {
   }
 
   onCategorySelected = (category) => {
-    this.setState({
-      category: category == "_all_" ? null : category
+    this.setState((state, props) => {
+      state.filter.category = category
+      return state
     });
   };
 
@@ -162,7 +163,7 @@ class App extends React.Component {
       if (!resourceMatchesRegion(resource, this.state.filter.regionType, this.state.filter.regionId)) {
         return false
       }
-      if (this.state.category && this.state.category != resource.category) {
+      if (this.state.filter.category && this.state.filter.category != resource.category) {
         return false;
       }
       if (!searchTerm || searchTerm === "") {
@@ -262,7 +263,7 @@ class App extends React.Component {
                 alignRight
                 as={InputGroup.Append}
                 onSelect={this.onCategorySelected}
-                title={!!this.state.category ? t(`category.${this.state.category}`) : t('category.all')}
+                title={!!this.state.filter.category ? t(`category.${this.state.filter.category}`) : t('category.all')}
                 variant={"secondary"}
               >
                 <Dropdown.Item eventKey={"_all_"}>{t('category.all')}</Dropdown.Item>
