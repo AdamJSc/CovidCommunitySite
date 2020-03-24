@@ -62,6 +62,19 @@ const getFilterObjectFromQueryString = (hash) => {
   return {...filterValues}
 }
 
+const getQueryStringFromFilterObject = (filterObject) => {
+  let queryParams = []
+
+  filterParams.forEach((param) => {
+    if (!filterObject.hasOwnProperty(param) || filterObject[param] == null) {
+      return
+    }
+    queryParams.push(param + '=' + filterObject[param])
+  })
+
+  return queryParams.join('&')
+}
+
 const getRegionById = (regionId) => {
   let filtered = Regions.filter((region) => {
     return region.id === regionId
@@ -116,7 +129,7 @@ class App extends React.Component {
     this.setState((state, props) => {
       state.filter.category = category
       return state
-    });
+    }, () => {window.location.hash = getQueryStringFromFilterObject(this.state.filter)});
   };
 
   onLocaleSelected = (locale) => {
@@ -131,10 +144,10 @@ class App extends React.Component {
 
   onRegionSelected = (regionId) => {
     this.setState((state, props) => {
-      state.filter.regionType = 'main'
-      state.filter.regionId = regionId
+      state.filter.regionType = regionId === '_all_' ? null : 'main'
+      state.filter.regionId = regionId === '_all_' ? null : regionId
       return state
-    });
+    }, () => {window.location.hash = getQueryStringFromFilterObject(this.state.filter)});
   };
 
   handleSearchTermChanged = (event) => {
@@ -142,16 +155,6 @@ class App extends React.Component {
       searchTerm: event.target.value
     });
   };
-
-  componentDidUpdate(prevProps) {
-    if (prevProps.location.hash === this.props.location.hash) {
-      return
-    }
-    this.setState((state, props) => {
-      state.filter = getFilterObjectFromQueryString(this.props.location.hash)
-      return state
-    })
-  }
 
   filterResources = (resources) => {
 
@@ -208,12 +211,12 @@ class App extends React.Component {
           <Navbar.Toggle aria-controls="responsive-navbar-nav" />
           <Navbar.Collapse id="responsive-navbar-nav">
             <Nav 
-              activeKey={this.state.regionId} 
+              activeKey={this.state.filter.regionId}
               className="mr-auto"
               onSelect={this.onRegionSelected}
             >
               <Nav.Link
-                active={!this.state.regionId}
+                active={!this.state.filter.regionId}
                 eventKey={"_all_"}
               >
               {t('regions.all')}
@@ -223,7 +226,6 @@ class App extends React.Component {
                   <Nav.Link
                     key={index}
                     eventKey={region.id}
-                    href={`#regionType=main&regionId=${region.id}`}
                   >
                     {typeof region.name === "string" ? region.name : region.name[this.state.locale]}
                   </Nav.Link>
