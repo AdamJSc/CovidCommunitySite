@@ -82,6 +82,31 @@ const getRegionById = (regionId) => {
   return filtered.length === 0 ? null : filtered[0]
 }
 
+const getSubRegionById = (subRegionId, region) => {
+  let regions = Regions
+
+  // determine whether or not we're just working with a single region
+  if (typeof region !== 'undefined') {
+    regions = [region]
+  }
+
+  // try to find a match for any sub region within each region
+  for (let ridx = 0; ridx < regions.length; ridx++) {
+    if (typeof regions[ridx].subRegions === 'undefined') {
+      continue
+    }
+
+    let subRegions = regions[ridx].subRegions
+    for (let sridx = 0; sridx < subRegions.length; sridx++) {
+      if (subRegions[sridx].id === subRegionId) {
+        return subRegions[sridx]
+      }
+    }
+  }
+
+  return null
+}
+
 const resourceMatchesRegion = (resource, regionType, regionId) => {
   if (typeof regionType !== 'string' || typeof regionId !== 'string') {
     // nothing to match on
@@ -101,13 +126,16 @@ const resourceMatchesRegion = (resource, regionType, regionId) => {
 
     // check if resource id matches any of region's sub regions
     let region = getRegionById(regionId)
-    if (region === null || typeof region.subRegions === 'undefined') {
+    if (region === null) {
       return false
     }
-    for (let i = 0; i < region.subRegions.length; i++) {
-      if (resource.regionIds.includes(region.subRegions[i].id)) {
-        return true
-      }
+
+    let subRegion = getSubRegionById(regionId, region)
+    if (subRegion === null || typeof subRegion.id === 'undefined') {
+      return false
+    }
+    if (resource.regionIds.includes(subRegion.id)) {
+      return true
     }
   }
 
@@ -127,7 +155,7 @@ class App extends React.Component {
 
   onCategorySelected = (category) => {
     this.setState((state, props) => {
-      state.filter.category = category
+      state.filter.category = category === '_all_' ? null : category
       return state
     }, () => {window.location.hash = getQueryStringFromFilterObject(this.state.filter)});
   };
@@ -173,6 +201,7 @@ class App extends React.Component {
         return true;
       }
       const name = typeof resource.name === "string" ? resource.name : resource.name[this.state.locale];
+      // TODO - make this read from regionIds array
       const city = typeof resource.city === "string" ? resource.city : resource.city[this.state.locale];
       const category = t(`category.${resource.category}`);
       const subCategory = t(`subCategory.${resource.subCategory}`)
